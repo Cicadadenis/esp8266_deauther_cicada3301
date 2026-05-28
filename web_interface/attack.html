@@ -1,0 +1,359 @@
+<html lang=en>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name=theme-color content="#050a1b">
+<meta name=description content="ESP8266 Deauther - Attack Panel">
+<title>Deauther • Attack</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin="">
+<link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Orbitron:wght@500;700;900&amp;display=swap"
+    rel=stylesheet>
+<link rel=stylesheet href=css/cicada_theme.css>
+<style>
+    .control-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        background: var(--glass);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+        box-shadow: var(--glow);
+    }
+
+    button {
+        background: rgba(50, 30, 90, 0.4);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        color: var(--text);
+        padding: 0.8rem 1.5rem;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    button.active {
+        background: var(--success);
+        color: #000;
+        box-shadow: 0 0 25px rgba(0, 255, 157, 0.5);
+    }
+
+    button.stop-all {
+        background: var(--danger);
+        color: white;
+    }
+
+    button.stop-all:hover {
+        background: #ff1a4d;
+    }
+
+    .info {
+        background: rgba(255, 170, 0, 0.12);
+        border: 1px solid var(--warning);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        backdrop-filter: blur(5px);
+    }
+
+    .section {
+        margin: 2.5rem 0;
+    }
+
+    .section h2 {
+        color: var(--neon-cyan);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .attack-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.2rem;
+        margin: 1.5rem 0;
+    }
+
+    .attack-card {
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1.4rem;
+        box-shadow: var(--glow);
+        transition: all 0.3s ease;
+    }
+
+    .attack-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 35px rgba(160, 32, 240, 0.25);
+    }
+
+    .attack-title {
+        color: var(--neon-cyan);
+        font-size: 1.3rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+    }
+
+    .attack-stats {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.95rem;
+        margin: 0.6rem 0;
+    }
+
+    .stat-label {
+        opacity: 0.8;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        color: var(--neon-cyan);
+    }
+
+    .attack-desc {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        opacity: 0.9;
+        margin-top: 1rem;
+    }
+
+    .total-pkts {
+        background: rgba(0, 240, 255, 0.08);
+        border: 1px solid var(--neon-cyan);
+        border-radius: 12px;
+        padding: 1.2rem;
+        text-align: center;
+        font-size: 1.4rem;
+        margin: 2rem 0;
+    }
+
+    .total-pkts span {
+        color: var(--neon-cyan);
+        font-weight: bold;
+        font-size: 1.8rem;
+    }
+
+    .mobile-only {
+        display: none;
+    }
+
+    .desktop-only {
+        display: inline;
+    }
+
+    .brand-mark {
+        opacity: 0.9;
+    }
+
+    @media (max-width: 480px) {
+        body {
+            font-size: 0.84rem;
+        }
+
+        .container {
+            padding: 0 0.7rem;
+        }
+
+        .menu a {
+            font-size: 0.82rem;
+            padding: 0.55rem 0.22rem;
+        }
+
+        .attack-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .control-panel {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.65rem;
+            padding: 0.9rem;
+            margin: 1rem 0;
+            border-radius: 12px;
+        }
+
+        .header {
+            font-size: 1.5rem;
+            margin: 0.85rem 0 1.05rem;
+            letter-spacing: 1px;
+        }
+
+        button {
+            padding: 0.62rem 0.82rem;
+            font-size: 0.8rem;
+        }
+
+        .info {
+            padding: 0.85rem;
+            margin: 1rem 0;
+            font-size: 0.8rem;
+            line-height: 1.42;
+        }
+
+        .total-pkts {
+            padding: 0.85rem;
+            font-size: 1rem;
+            margin: 1.2rem 0;
+        }
+
+        .total-pkts span {
+            font-size: 1.2rem;
+        }
+
+        .attack-card {
+            border-radius: 12px;
+            padding: 0.85rem;
+        }
+
+        .attack-title {
+            font-size: 1rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .attack-stats {
+            font-size: 0.76rem;
+            margin: 0.35rem 0;
+        }
+
+        .attack-desc {
+            font-size: 0.74rem;
+            line-height: 1.35;
+            margin-top: 0.65rem;
+        }
+
+        .mobile-only {
+            display: inline;
+        }
+
+        .desktop-only {
+            display: none;
+        }
+
+        .brand-mark {
+            display: none;
+        }
+    }
+
+    @media (max-width: 390px) {
+        body {
+            font-size: 0.8rem;
+        }
+
+        .container {
+            padding: 0 0.58rem;
+        }
+
+        .menu a {
+            font-size: 0.76rem;
+            padding: 0.5rem 0.14rem;
+        }
+
+        .header {
+            font-size: 1.18rem;
+            margin: 0.7rem 0 0.9rem;
+        }
+
+        .control-panel,
+        .info,
+        .total-pkts,
+        .attack-card {
+            padding: 0.72rem;
+        }
+
+        button {
+            font-size: 0.72rem;
+            padding: 0.44rem 0.58rem;
+        }
+
+        .attack-title {
+            font-size: 0.88rem;
+        }
+
+        .attack-stats,
+        .attack-desc {
+            font-size: 0.68rem;
+        }
+    }
+</style>
+
+<body onload="loadLang()">
+    <canvas id=starsBg></canvas>
+    <div class=bg-glow></div>
+    <div class=bg-grid></div>
+    <nav>
+        <ul class=menu>
+            <li><a href=scan>Скан</a>
+            <li><a href=radar>Радар</a>
+            <li><a href=ssids>SSIDs</a>
+            <li><a href=attack class=active>Атаки</a>
+            <li><a href=settings>Настройки</a>
+            <li><a href=info>Инфо</a>
+        </ul>
+    </nav>
+    <div class=container>
+        <h1 class=header>꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</h1>
+        <h1 class=header>АТАКА</h1>
+        <div class=control-panel> <button onclick="stopAll()" class=stop-all><span class=desktop-only>СТОП
+                    ВСЁ</span><span class=mobile-only>СТОП ВСЕ</span></button> <button onclick="startDeauthAll()"
+                class=stop-all><span class=desktop-only>DEAUTH ALL</span><span class=mobile-only>DEAUTH
+                    ALL</span></button> <button onclick="load()"><span class=desktop-only>ОБНОВИТЬ</span><span
+                    class=mobile-only>ОБНОВИТЬ</span></button> </div>
+        <div class=info> <strong style="color:var(--warning);">WARNING:</strong><br><br> <span class=desktop-only>→ При
+                запуске атаки возможна потеря соединения!<br> → Для Deauth: выберите только одну цель (разные каналы =
+                проблемы)<br> → Для Beacon/Probe: нужен сохранённый SSID<br> → Обновить — для обновления статистики
+                пакетов<br><br> <small>Ошибка? Перезагрузите страницу и проверьте серийный монитор.</small></span> <span
+                class=mobile-only>→ Соединение может оборваться<br>→ Только одна цель<br>→ Beacon/Probe: нужен SSID<br>→
+                Обновить для статистики</span> </div>
+        <div class=total-pkts> Всего пакетов/с: <span id=allpkts>0</span> </div>
+        <div class=attack-grid> <!-- Deauth Card -->
+            <div class=attack-card>
+                <div class=attack-title>Deauth</div>
+                <div class=attack-stats> <span class=stat-label>Цели:</span> <span class=stat-value
+                        id=deauthTargets>0</span> </div>
+                <div class=attack-stats> <span class=stat-label>Пак/с:</span> <span class=stat-value
+                        id=deauthPkts>0/0</span> </div> <button id=deauth onclick="start(0)" class=select>СТАРТ</button>
+                <div class=attack-desc> Отправляет фреймы деаутентификации для отключения выбранных WiFi устройств.<br>
+                    Работает т.к. большинство устройств не учитывают защиту 802.11w.<br> <strong>Внимание:</strong>
+                    Только одна цель! Несколько целей на разных каналах = невозможно переподключиться. </div>
+            </div> <!-- Beacon Card -->
+            <div class=attack-card>
+                <div class=attack-title>Beacon</div>
+                <div class=attack-stats> <span class=stat-label>Цели:</span> <span class=stat-value
+                        id=beaconTargets>0</span> </div>
+                <div class=attack-stats> <span class=stat-label>Пак/с:</span> <span class=stat-value
+                        id=beaconPkts>0/0</span> </div> <button id=beacon onclick="start(1)" class=select>СТАРТ</button>
+                <div class=attack-desc> Засыпает эфир поддельными Маячковыми фреймами → создаются призрачные
+                    WiFi-сети.<br> Имена сетей берётся из списка SSID.<br> Хорошо для тестирования видимости сетей.
+                </div>
+            </div>
+            <div class=attack-card>
+                <div class=attack-title>Probe</div>
+                <div class=attack-stats> <span class=stat-label>Цели:</span> <span class=stat-value
+                        id=probeTargets>0</span> </div>
+                <div class=attack-stats> <span class=stat-label>Пак/с:</span> <span class=stat-value
+                        id=probePkts>0/0</span> </div> <button id=probe onclick="start(2)" class=select>СТАРТ</button>
+                <div class=attack-desc> Отправляет Probe-запросы для SSID из списка.<br> Запутывает WiFi-трекеры /
+                    сканеры, логирующие запросы.<br> На домашней сети видимый эффект минимален. </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/theme_bg.js"></script>
+    <script src="js/site.js"></script>
+    <script src="js/attack.js"></script>

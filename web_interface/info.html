@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#050a1b">
+    <meta name="description" content="Cicada3301 ESP8266 Deauther — возможности и информация">
+    <title>Cicada3301 • О проекте</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/cicada_theme.css">
+    <style>
+        :root {
+            --card: var(--card-bg);
+            --border: var(--card-border);
+            --muted: var(--text-muted);
+            --warn: var(--warning);
+        }
+
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 5.5rem 1.25rem 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .page { padding-top: 1.5rem; }
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 2rem 1rem;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(126, 232, 255, 0.08), transparent 70%);
+            border-radius: 20px;
+        }
+
+        .hero-emblem {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 1.25rem;
+            opacity: 0.9;
+        }
+
+        .brand {
+            font-family: 'Cinzel', 'Orbitron', serif;
+            font-size: clamp(1.1rem, 4.5vw, 1.55rem);
+            font-weight: 700;
+            color: #d4af37;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+        }
+
+        .tagline {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .tagline span { color: var(--accent); }
+
+        .author-card {
+            margin-top: 1.75rem;
+            padding: 1.25rem 1.5rem;
+            background: var(--card);
+            border: 1px solid rgba(201, 169, 98, 0.35);
+            border-radius: 14px;
+            box-shadow: 0 0 24px rgba(201, 169, 98, 0.08);
+        }
+
+        .author-card h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 0.65rem;
+        }
+
+        .author-card p {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .author-card strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            text-shadow: var(--glow);
+        }
+
+        .feature-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .feature {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.15rem 1.25rem;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .feature:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--glow);
+        }
+
+        .feature h3 {
+            font-size: 0.88rem;
+            color: var(--success);
+            margin-bottom: 0.45rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature h3 .icon {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .feature p {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .feature p strong { color: var(--text); }
+
+        .steps {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .steps li {
+            counter-increment: step;
+            position: relative;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            margin-bottom: 0.65rem;
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0.85rem;
+            top: 0.85rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            line-height: 1.5rem;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #0a0a12;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .warn-box {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 14px;
+            padding: 1.2rem 1.35rem;
+            font-size: 0.8rem;
+            color: #ffb3c6;
+            margin-top: 2rem;
+        }
+
+        .warn-box strong { color: var(--danger); }
+
+        .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .tech-list span {
+            font-size: 0.72rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--border);
+            color: var(--accent);
+        }
+
+        .cta {
+            text-align: center;
+            margin-top: 2.5rem;
+        }
+
+        .cta a {
+            display: inline-block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: #0a0a12;
+            background: linear-gradient(135deg, var(--gold), #8a7340);
+            padding: 0.9rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 24px rgba(201, 169, 98, 0.3);
+            transition: 0.25s;
+        }
+
+        .cta a:hover {
+            box-shadow: 0 0 32px rgba(0, 212, 255, 0.35);
+            transform: translateY(-2px);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        footer .brand-small {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            opacity: 0.85;
+            margin-bottom: 0.35rem;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starsBg"></canvas>
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <nav>
+        <ul class="menu">
+            <li><a href="scan">Скан</a></li>
+            <li><a href="radar">Радар</a></li>
+            <li><a href="ssids">SSIDs</a></li>
+            <li><a href="attack">Атаки</a></li>
+            <li><a href="settings">Настройки</a></li>
+            <li><a href="info" class="active">Инфо</a></li>
+        </ul>
+    </nav>
+
+    <main class="page">
+        <header class="hero">
+            <svg class="hero-emblem" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <polygon points="100,28 172,72 172,128 100,172 28,128 28,72" stroke="url(#hg)" stroke-width="1.2" fill="none"/>
+                <text x="100" y="108" text-anchor="middle" font-family="Orbitron,sans-serif" font-size="26" font-weight="700" fill="#7ee8ff">3301</text>
+                <defs>
+                    <linearGradient id="hg" x1="28" y1="28" x2="172" y2="172">
+                        <stop offset="0%" stop-color="#c9a962"/>
+                        <stop offset="50%" stop-color="#7ee8ff"/>
+                        <stop offset="100%" stop-color="#c9a962"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <p class="brand">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</p>
+            <p class="tagline"><span>deauther</span> · esp8266 · web</p>
+
+            <div class="author-card">
+                <h2>Автор прошивки и интерфейса</h2>
+                <p>
+                    <strong>꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</strong><p><p></p>
+                    <br>(SpacehuhnTech) — Wi‑Fi‑инструмент для
+                    тестирования  802.11. Сетей
+                </p>
+            </div>
+        </header>
+
+        <section class="section">
+            <h2>Что умеет программа</h2>
+            <div class="feature-grid">
+                <article class="feature">
+                    <h3><span class="icon">📡</span> Скан точек доступа</h3>
+                    <p>Поиск Wi‑Fi сетей (SSID, канал, RSSI, шифрование, MAC, производитель OUI). Карта каналов и график сигнала.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">👥</span> Скан клиентов (станций)</h3>
+                    <p>Клиенты собираются в фоне (promiscuous) после скана AP. Глубокий скан: deauth + sniff 15–45 с; в это время радио фиксируется на канале цели — SoftAP/веб могут временно отключиться. Фильтр по AP.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">⚡</span> Deauthentication</h3>
+                    <p>Отправка deauth/disassoc к выбранным AP или клиентам. Работает на WPA2 без PMF; WPA3/PMF часто блокируют атаку.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">📶</span> Beacon и Probe</h3>
+                    <p>Фейковые SSID (список на странице SSIDs): beacon‑спам и probe‑запросы для тестов совместимости и трекеров.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">🔐</span> Захват handshake (HS)</h3>
+                    <p>Экспериментальный захват EAPOL (4‑way) → <strong>handshake.cap</strong> для hashcat/aircrack. Только своя AP, ~40 с.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">💾</span> EEPROM и имена</h3>
+                    <p>Сохранение целевой AP, канала и настроек. Список имён устройств, клонирование SSID с карточки AP.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">🌐</span> Веб‑интерфейс</h3>
+                    <p>Управление с телефона/ПК через AP ESP: скан, атаки, настройки, экспорт <code>scan.json</code>, captive portal.</p>
+                </article>
+                <article class="feature">
+                    <h3><span class="icon">⌨️</span> Serial CLI</h3>
+                    <p>Команды через USB: <code>scan</code>, <code>attack</code>, <code>capture handshake</code>, <code>sysinfo</code> и др.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Быстрый сценарий</h2>
+            <ol class="steps">
+                <li>Подключитесь к Wi‑Fi ESP (например «Войти: cicada3301») и откройте веб‑интерфейс.</li>
+                <li><strong>Скан AP</strong> → <strong>Обновить</strong> — подождите 10–20 с, клиенты появятся в фоне.</li>
+                <li>При необходимости: выберите AP → <strong>Скан клиентов</strong> (30–45 с, SoftAP/веб могут пропасть) → <strong>Обновить</strong>.</li>
+                <li>При необходимости: <strong>HS</strong> на клиенте или <strong>Атаки</strong> на странице Deauth.</li>
+            </ol>
+        </section>
+
+        <section class="section">
+            <h2>Ограничения ESP8266</h2>
+            <div class="feature-grid">
+                <article class="feature">
+                    <h3>Только 2.4 GHz</h3>
+                    <p>Диапазон 5 GHz недоступен на ESP8266.</p>
+                </article>
+                <article class="feature">
+                    <h3>Не «тип устройства»</h3>
+                    <p>Показывается MAC и OUI (бренд). Телефон/ноут по MAC не определяется; часто пустой vendor из‑за random MAC.</p>
+                </article>
+                <article class="feature">
+                    <h3>AP всегда включён</h3>
+                    <p>При скане клиентов/HS радио переключается на канал цели. В это время точка ESP и веб-интерфейс могут временно стать недоступны — просто переподключитесь и нажмите «Обновить».</p>
+                </article>
+            </div>
+            <div class="tech-list">
+                <span>ESP8266</span>
+                <span>802.11 b/g/n</span>
+                <span>LittleFS</span>
+                <span>Promiscuous</span>
+                <span>Deauther SDK 2.7.5</span>
+            </div>
+        </section>
+
+        <div class="warn-box">
+            <strong>Только законное использование.</strong>
+            Применяйте исключительно на <strong>своих</strong> сетях и устройствах или с явным письменным разрешением владельца.
+            Несанкционированное сканирование и deauth незаконны во многих странах. Автор не несёт ответственности за неправомерное использование.
+        </div>
+
+        <div class="cta">
+            <a href="scan">Перейти к сканированию</a>
+        </div>
+
+        <footer>
+            <p class="brand-small">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</p>
+        </footer>
+    </main>
+    <script src="js/theme_bg.js"></script>
+    <script src="js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,874 @@
+<html lang=en data-theme=dark>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name=theme-color content="#050a1b">
+<title>ESP8266 Deauther • Scan</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin="">
+<link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Orbitron:wght@500;700&amp;display=swap"
+    rel=stylesheet>
+<link rel=stylesheet href=css/cicada_theme.css>
+<style>
+    .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem 0 0.85rem;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    button,
+    select,
+    input[type="number"] {
+        padding: 0.8rem 1.4rem;
+        border: none;
+        border-radius: 12px;
+        font-family: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: var(--glass);
+        color: var(--text);
+        border: 1px solid var(--card-border);
+    }
+
+    button:hover {
+        background: var(--accent);
+        color: #000;
+        box-shadow: 0 0 20px var(--accent-glow);
+        transform: translateY(-2px);
+    }
+
+    /* Стеклянный эффект для основных кнопок вверху */
+    #scanZero,
+    #scanOne,
+    #RButton {
+        width: min(720px, 100%);
+        border-radius: 14px;
+        padding: 0.52rem 1rem;
+        min-height: 44px;
+        line-height: 1.25;
+        font-size: 0.88rem;
+        letter-spacing: 0.02em;
+        margin-left: auto;
+        margin-right: auto;
+        background: linear-gradient(180deg, rgba(0, 240, 255, 0.10), rgba(0, 0, 0, 0.18));
+        border: 1px solid rgba(140, 120, 255, 0.30);
+        box-shadow:
+            0 0 22px rgba(0, 240, 255, 0.20),
+            0 0 34px rgba(122, 92, 255, 0.10),
+            inset 0 0 22px rgba(160, 80, 255, 0.10);
+    }
+
+    #scanZero:hover,
+    #scanOne:hover,
+    #RButton:hover {
+        background: linear-gradient(180deg, rgba(0, 240, 255, 0.18), rgba(0, 0, 0, 0.18));
+        box-shadow:
+            0 0 34px rgba(0, 240, 255, 0.30),
+            0 0 46px rgba(122, 92, 255, 0.14),
+            inset 0 0 26px rgba(160, 80, 255, 0.12);
+        color: #000;
+    }
+
+    /* Make top 3 buttons stacked like screenshot on mobile */
+    @media (max-width: 768px) {
+        .controls { flex-direction: column; gap: 0.5rem; padding: 0; }
+        #scanZero, #scanOne, #RButton { width: 100%; font-size: 0.86rem; padding: 0.48rem 0.9rem; }
+    }
+
+    .settings-glass {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem 1rem;
+        justify-content: center;
+        align-items: flex-end;
+        margin: 0.75rem 0 1rem;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        background: var(--btn-glass);
+        border: 1px solid var(--neon-border);
+        box-shadow: 0 0 22px rgba(34, 85, 255, 0.14), inset 0 0 20px rgba(0, 240, 255, 0.05);
+        backdrop-filter: blur(12px);
+    }
+
+    .settings-glass label {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        text-align: center;
+    }
+
+    .settings-glass select,
+    .settings-glass input[type="number"] {
+        min-width: 72px;
+        text-align: center;
+        background: rgba(5, 10, 28, 0.75);
+        border: 1px solid rgba(34, 85, 255, 0.35);
+        box-shadow: inset 0 0 12px rgba(0, 240, 255, 0.06);
+    }
+
+    .scan-hero {
+        position: relative;
+        margin: 0.5rem -0.35rem 1rem;
+        padding: 0.35rem 0.2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 85, 255, 0.28);
+        background: rgba(5, 10, 30, 0.35);
+        box-shadow: 0 0 28px rgba(0, 240, 255, 0.12), inset 0 0 24px rgba(122, 92, 255, 0.06);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        width: calc(100% + 0.7rem);
+        max-width: none;
+    }
+
+    .scan-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 60%, rgba(0,240,255,0.10) 0%, transparent 65%);
+        pointer-events: none;
+    }
+
+    #scanCones {
+        display: block;
+        width: 100%;
+        height: min(44vw, 260px);
+        min-height: 200px;
+        aspect-ratio: 2.35 / 1;
+        max-height: 280px;
+    }
+
+    /* Desktop: шире по горизонтали — сетка радара заполняет блок */
+    @media (min-width: 1024px) {
+        .scan-hero {
+            margin-left: -1.5rem;
+            margin-right: -1.5rem;
+            width: calc(100% + 3rem);
+            padding: 0.35rem 0.15rem;
+        }
+        #scanCones {
+            height: auto;
+            min-height: 220px;
+            max-height: 300px;
+            aspect-ratio: 2.75 / 1;
+        }
+    }
+
+    /* RSSI list — 2 columns like reference screenshot */
+    .rssi-chart {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem 0.65rem;
+        margin-top: 0.5rem;
+    }
+
+    .rssi-row {
+        background: rgba(8, 12, 32, 0.55);
+        border: 1px solid rgba(34, 85, 255, 0.22);
+        border-radius: 12px;
+        padding: 0.5rem 0.55rem 0.45rem;
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.08);
+        backdrop-filter: blur(8px);
+        min-width: 0;
+    }
+
+    .rssi-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.35rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .rssi-ssid {
+        font-weight: 600;
+        font-size: 0.72rem;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .rssi-db {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--accent);
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+        white-space: nowrap;
+    }
+
+    .rssi-bar-bg {
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(0, 240, 255, 0.18);
+        overflow: hidden;
+        box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.08);
+    }
+
+    .rssi-bar-fg {
+        height: 100%;
+        border-radius: 999px;
+        transform-origin: 0 50%;
+        animation: rssiFill 0.55s ease-out both;
+    }
+
+    @keyframes rssiFill {
+        from { transform: scaleX(0.08); opacity: 0.55; }
+        to { transform: scaleX(1); opacity: 1; }
+    }
+
+    .section-rssi h2 {
+        text-align: center;
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(0, 240, 255, 0.85);
+    }
+
+    button.red {
+        background: var(--danger);
+    }
+
+    button.green {
+        background: var(--success);
+        color: #000;
+    }
+
+    .info-box {
+        background: rgba(255, 51, 102, 0.12);
+        border: 1px solid var(--danger);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .section {
+        margin: 2.5rem 0;
+    }
+
+    .section h2 {
+        color: var(--accent);
+        margin-bottom: 1rem;
+        font-size: 1.4rem;
+        text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Карточки вместо таблиц */
+    .card-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.2rem;
+    }
+
+    .card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 0.95rem;
+        box-shadow: var(--glow);
+        transition: all 0.3s;
+    }
+
+    .card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 30px rgba(0, 212, 255, 0.15);
+    }
+
+    .card.selected {
+        border-color: var(--success);
+        box-shadow: 0 0 18px rgba(0, 255, 157, 0.35);
+    }
+
+    .workflow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        justify-content: center;
+        margin: 1rem 0 0.5rem;
+        font-size: 0.78rem;
+    }
+
+    .workflow .step {
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid var(--card-border);
+        background: var(--glass);
+        color: var(--text-muted);
+        transition: all 0.25s;
+    }
+
+    .workflow .step.done {
+        border-color: var(--success);
+        color: var(--success);
+    }
+
+    .workflow .step.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        box-shadow: var(--glow);
+    }
+
+    .scan-status {
+        text-align: center;
+        color: var(--accent);
+        min-height: 1.2rem;
+        margin: 0.5rem 0;
+        font-size: 0.88rem;
+    }
+
+    .info-box.ok {
+        background: rgba(0, 255, 157, 0.08);
+        border-color: var(--success);
+    }
+
+    .tools-panel {
+        background: var(--glass);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 1rem;
+        margin: 1rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .channel-map {
+        display: grid;
+        grid-template-columns: repeat(14, 1fr);
+        gap: 4px;
+        margin-top: 0.75rem;
+    }
+
+    .ch-cell {
+        text-align: center;
+        font-size: 0.65rem;
+        min-height: 52px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--card-border);
+        padding: 2px 1px;
+        position: relative;
+    }
+
+    .ch-cell .ch-num {
+        color: var(--text-muted);
+        font-size: 0.6rem;
+    }
+
+    .ch-cell .ch-bar {
+        position: absolute;
+        bottom: 0;
+        left: 8%;
+        width: 84%;
+        border-radius: 3px 3px 0 0;
+        background: var(--accent);
+        opacity: 0.85;
+        min-height: 2px;
+    }
+
+    .ch-cell.busy {
+        border-color: var(--success);
+        box-shadow: 0 0 8px rgba(0, 255, 157, 0.25);
+    }
+
+    .badge-online {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .online-yes {
+        background: rgba(0, 255, 157, 0.2);
+        color: var(--success);
+    }
+
+    .online-maybe {
+        background: rgba(255, 170, 0, 0.2);
+        color: #ffaa00;
+    }
+
+    .online-no {
+        background: rgba(160, 160, 160, 0.15);
+        color: var(--text-muted);
+    }
+
+    .sec-hint {
+        font-size: 0.78rem;
+        opacity: 0.9;
+    }
+
+    .ap-save-row {
+        margin: 0.45rem 0 0;
+    }
+
+    .ap-save-row button {
+        width: 100%;
+    }
+
+    button.orange {
+        background: linear-gradient(135deg, #ea580c, #f59e0b);
+        color: #fff;
+    }
+
+    button.purple {
+        background: linear-gradient(135deg, #5b21b6 0%, #6366f1 45%, #22d3ee 100%);
+        color: #fff;
+        border: 1px solid rgba(122, 92, 255, 0.45);
+        box-shadow: 0 0 16px rgba(122, 92, 255, 0.25);
+    }
+
+    button.cyan {
+        background: linear-gradient(135deg, #0891b2, var(--accent));
+        color: #000;
+        font-weight: 600;
+    }
+
+    .select-btns button.green,
+    .select-btns button.orange,
+    .select-btns button.cyan,
+    .select-btns button.purple,
+    .select-btns button.red {
+        border: none;
+        font-weight: 600;
+    }
+
+    .select-btns button.green {
+        background: linear-gradient(135deg, #059669, var(--success));
+        color: #000;
+    }
+
+    .select-btns button.orange {
+        background: linear-gradient(135deg, #ea580c, #f59e0b);
+        color: #fff;
+    }
+
+    .select-btns button.cyan {
+        background: linear-gradient(135deg, #0891b2, var(--accent));
+        color: #000;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.8rem;
+        font-weight: bold;
+        color: var(--accent);
+    }
+
+    .card-body {
+        font-size: 0.9rem;
+        line-height: 1.35;
+        word-break: break-all;
+    }
+
+    .signal-gauge {
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .signal-gauge svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    @media (max-width: 500px) {
+        .signal-gauge {
+            width: 90px;
+            height: 90px;
+        }
+    }
+
+    .select-btns {
+        margin-top: 0.75rem;
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .select-btns button {
+        padding: 0.55rem 0.95rem;
+        font-size: 0.86rem;
+    }
+
+    .mobile-only {
+        display: none;
+    }
+
+    .desktop-only {
+        display: inline;
+    }
+
+    .footer-mark {
+        opacity: 0.65;
+    }
+
+    .scan-title {
+        display: block;
+        max-width: calc(100% - 1.4rem);
+        overflow-wrap: anywhere;
+        line-height: 1.2;
+    }
+
+    .scan-side,
+    .scan-lock {
+        flex-shrink: 0;
+        font-size: 0.86em;
+    }
+
+    .scan-mono,
+    .scan-mono-input {
+        font-size: 0.95em;
+        letter-spacing: -0.02em;
+    }
+
+    .scan-ellipsis {
+        display: inline-block;
+        max-width: 100%;
+        vertical-align: bottom;
+    }
+
+    .brand-mark {
+        opacity: 0.9;
+    }
+
+    @media (min-width: 430px) and (max-width: 760px) {
+        .card-container {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    /* На очень маленьких экранах карточки в столбик */
+    @media (max-width: 500px) {
+        body {
+            font-size: 0.84rem;
+        }
+
+        .container {
+            margin: 56px auto 24px;
+            padding: 0 0.7rem;
+        }
+
+        .menu a {
+            font-size: 0.82rem;
+            padding: 0.55rem 0.22rem;
+        }
+
+        .card-container {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .controls {
+            flex-direction: column;
+            gap: 0.7rem;
+            margin: 1rem 0;
+            padding: 0.85rem;
+            border-radius: 12px;
+        }
+
+        button,
+        select,
+        input[type="number"] {
+            padding: 0.62rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 10px;
+        }
+
+        .info-box {
+            padding: 0.85rem;
+            margin: 1rem 0;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .section {
+            margin: 1.6rem 0;
+        }
+
+        .section h2 {
+            font-size: 1.08rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .header {
+            font-size: 1.32rem;
+            margin: 0.85rem 0 1.05rem;
+            letter-spacing: 1px;
+        }
+
+        .row {
+            gap: 0.65rem !important;
+            margin: 1rem 0 !important;
+        }
+
+        .card {
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+
+        .card-header {
+            margin-bottom: 0.45rem;
+            font-size: 0.96rem;
+        }
+
+        .card-body {
+            font-size: 0.84rem;
+            line-height: 1.28;
+        }
+
+        .card-body p {
+            margin: 0.16rem 0;
+        }
+
+        .select-btns {
+            margin-top: 0.55rem;
+            gap: 0.45rem;
+        }
+
+        .select-btns button {
+            padding: 0.45rem 0.72rem;
+            font-size: 0.78rem;
+        }
+
+        .mobile-only {
+            display: inline;
+        }
+
+        .desktop-only {
+            display: none;
+        }
+
+        .footer-mark {
+            display: none;
+        }
+
+        .scan-title {
+            max-width: calc(100% - 1rem);
+            font-size: 0.82rem;
+        }
+
+        .scan-side,
+        .scan-lock {
+            font-size: 0.72rem;
+        }
+
+        .scan-mono,
+        .scan-mono-input {
+            font-size: 0.74rem;
+        }
+
+        .scan-ellipsis {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-mark {
+            display: none;
+        }
+    }
+
+    @media (max-width: 390px) {
+        body {
+            font-size: 0.8rem;
+        }
+
+        .container {
+            padding: 0 0.58rem;
+        }
+
+        .menu a {
+            font-size: 0.76rem;
+            padding: 0.5rem 0.14rem;
+        }
+
+        .header {
+            font-size: 1.18rem;
+            margin: 0.7rem 0 0.9rem;
+        }
+
+        .controls,
+        .info-box {
+            padding: 0.72rem;
+        }
+
+        .section h2 {
+            font-size: 0.98rem;
+        }
+
+        .card {
+            padding: 0.62rem;
+        }
+
+        .card-header {
+            font-size: 0.82rem;
+        }
+
+        .card-body {
+            font-size: 0.72rem;
+        }
+
+        .select-btns button,
+        button,
+        select,
+        input[type="number"] {
+            font-size: 0.72rem;
+            padding: 0.38rem 0.56rem;
+        }
+
+        .scan-title,
+        .scan-side,
+        .scan-lock {
+            font-size: 0.68rem;
+        }
+
+        .rssi-chart {
+            grid-template-columns: 1fr;
+        }
+
+        .scan-hero {
+            margin-left: -0.7rem;
+            margin-right: -0.7rem;
+            width: calc(100% + 1.4rem);
+            padding: 0.3rem 0.15rem;
+        }
+
+        #scanCones {
+            min-height: 200px;
+            height: 50vw;
+        }
+    }
+</style>
+
+<body onload="loadLang()">
+    <canvas id="starsBg"></canvas>
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <nav>
+        <ul class=menu>
+            <li><a href=scan class=active>Скан</a>
+            <li><a href=radar>Радар</a>
+            <li><a href=ssids>SSIDs</a>
+            <li><a href=attack>Атаки</a>
+            <li><a href=settings>Настройки</a>
+            <li><a href=info>Инфо</a>
+        </ul>
+    </nav>
+    <div class=container>
+        <h1 class=header>꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</h1>
+        <h1 class=header>СКАН СЕТИ</h1>
+        <div class=controls> <button id=scanZero onclick="scan(0)"><span class=desktop-only>1. Скан Wi-Fi сети</span><span
+                    class=mobile-only>Скан Wi-Fi сети</span></button> <button id=scanOne onclick="scan(1)"><span
+                    class=desktop-only>3. Скан клиентов</span><span class=mobile-only>Скан Клиентов</span></button> <button
+                id=RButton onclick="load(true)"><span class=desktop-only>4. Обновить</span><span
+                    class=mobile-only>Обновить</span></button> </div>
+        
+        <div class="row settings-glass">
+            <div> <label for=ch>Канал</label> <select id=ch data-cyber-title="Канал Wi‑Fi">
+                    <option value=all>Все
+                    <option value=1>1
+                    <option value=2>2
+                    <option value=3>3
+                    <option value=4>4
+                    <option value=5>5
+                    <option value=6>6
+                    <option value=7>7
+                    <option value=8>8
+                    <option value=9>9
+                    <option value=10>10
+                    <option value=11>11
+                    <option value=12>12
+                    <option value=13>13
+                    <option value=14>14
+                </select> </div>
+            <div> <label>Время скана станций</label> <input type=number value=30 id=scanTime min=15 max=45
+                    style="width:80px;"> s <span class=hint></span>
+            </div>
+            <div> <label>Автоскан клиентов</label> <input type=number value=5 id=schedScanMin min=1 max=120
+                    style="width:56px;"> мин <button type=button id=schedScanBtn onclick="toggleScheduledScan()"
+                    class=purple>Вкл</button> </div>
+        </div>
+        <div class=tools-panel> <button type=button onclick="exportScan()">Экспорт</button> <button
+                type=button onclick="drawChannelMap();drawRssiChart()">Обновить карту</button> </div>
+        <div class="scan-hero">
+            <canvas id="scanCones" aria-label="Визуализация силы сигнала Wi-Fi"></canvas>
+        </div>
+        <div class="section section-rssi">
+            <h2>Уровень сигнала (RSSI)</h2>
+            <div id=rssiChart class=rssi-chart></div>
+        </div>
+        <div class=section>
+            <h2>Карта каналов Wi-Fi</h2>
+            <div id=channelMap></div>
+        </div>
+        <div class="info-box ok"> <strong style="color:var(--success);">Как смотреть клиентов</strong><br> <span class=desktop-only>
+                <strong style="color:var(--neon-cyan);">Авто (фон):</strong> после «Скан Wi-Fi сети» и «Обновить» клиенты появляются сами
+                (promiscuous, ~2 с). В процессе устройство может переключать радио по каналам — иногда веб на секунды «подвисает». Подождите 10–20 с и снова «Обновить».<br>
+                <strong style="color:var(--neon-cyan);">Глубокий скан:</strong> ① <strong>Скан Wi-Fi сети</strong> → ② выберите
+                <strong>одну</strong> Wi-Fi сети → ③ <strong>Скан клиентов</strong> (15–45 с, deauth + sniff) → ④
+                <strong>Обновить</strong>. Во время скана радио фиксируется на канале цели — SoftAP/веб могут временно отключиться, это нормально.<br>
+                <strong>Кнопки:</strong> <strong>«Клиент.»</strong> на карточке Wi-Fi сети — быстрый скан клиентов этой сети.
+                <strong>«HS»</strong> — handshake (лучше на конкретном клиенте).
+                <strong>EEPROM</strong> — сохранить Wi-Fi сети/канал в настройки. Клон SSID — на вкладке SSIDs.<br>
+                <strong>Если станций 0:</strong> сначала есть Wi-Fi сети в списке? клиенты привязаны к известным BSSID. Попробуйте
+                «Скан клиентов» 30–45 с на канале Wi-Fi сети. PMF/WPA3 мешают.<br>
+                <strong style="color:var(--danger);">Только своя лабораторная Wi-Fi сети!</strong> </span> <span class=mobile-only>
+                Скан Wi-Fi сети → Обновить → ждите клиентов.  На время скана точка ESP может пропасть. </span> </div>
+        <div class=section>
+            <h2>Точки доступа: <span id=apNum>0</span></h2>
+            <div class=card-container id=apTable></div>
+            <div class=select-btns> <button class=green onclick="selectAll(0,true)"><span class=desktop-only>Выбрать все</span><span
+                        class=mobile-only>Все</span></button> <button class=orange onclick="selectAll(0,false)"><span
+                        class=desktop-only>Снять все</span><span class=mobile-only>Снять</span></button> </div>
+        </div>
+        <div class=section>
+            <h2>Станции: <span id=stNum>0</span> <small id=stFilterHint style="font-size:0.75em;opacity:0.85"></small>
+            </h2>
+            <p class=hint style="text-align:center;margin-bottom:0.75rem">Список обновляется в фоне. Нет клиентов — «Скан Wi-Fi сети», подождите, «Обновить»; при необходимости «Скан клиентов» для выбранной Wi-Fi сети.</p>
+            <div class=select-btns style="margin-bottom:0.75rem"> <label
+                    style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"> <input type=checkbox
+                        id=filterByAp checked> Только клиенты выбранной Wi-Fi сети </label> <button type=button
+                    onclick="clearStationFilter()" class=cyan>Показать всех</button> </div>
+            <div class=card-container id=stTable></div>
+            <div class=select-btns> <button class=green onclick="selectAll(1,true)"><span class=desktop-only>Выбрать все</span><span
+                        class=mobile-only>Все</span></button> <button class=orange onclick="selectAll(1,false)"><span
+                        class=desktop-only>Снять все</span><span class=mobile-only>Снять</span></button> </div>
+        </div>
+        <div class=section>
+            <h2>Сохранённые устройства: <span id=nNum>0</span></h2>
+            <div class=card-container id=nTable></div>
+            <div class=select-btns> <button class=green onclick="selectAll(2,true)"><span class=desktop-only>Выбрать все</span><span
+                        class=mobile-only>Все</span></button> <button class=orange onclick="selectAll(2,false)"><span
+                        class=desktop-only>Снять все</span><span class=mobile-only>Снять</span></button> <button class=cyan
+                    onclick="add(2)"><span class=desktop-only>Новое</span><span class=mobile-only>Доб</span></button>
+            </div>
+        </div>
+    </div>
+    <h1 class="header footer-mark">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</h1>
+    <script src="js/theme_bg.js"></script>
+    <script src="js/site.js"></script>
+    <script src="js/scan.js"></script>

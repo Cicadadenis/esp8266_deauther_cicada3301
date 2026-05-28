@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<!-- saved from url=(0095)file:///C:/Users/denis/Desktop/esp/esp8266_deauther-2/esp8266_deauther/web_interface/index -->
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050a1b">
+<title>Cicada3301 • Deauther</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --black: #050a1b;
+        --void: #050a1b;
+        --gold: #d4af37;
+        --gold-bright: #f0d078;
+        --gold-dim: #8a7340;
+        --ice: #00f0ff;
+        --ice-dim: rgba(0, 240, 255, 0.35);
+        --white: #f4f6ff;
+        --muted: #9aa8d8;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: hidden;
+        background:
+            radial-gradient(900px 500px at 12% -8%, rgba(34, 85, 255, 0.22) 0%, transparent 58%),
+            radial-gradient(760px 420px at 92% 6%, rgba(122, 92, 255, 0.20) 0%, transparent 55%),
+            linear-gradient(180deg, #050a1b 0%, #070b22 42%, #050a1b 100%);
+        color: var(--white);
+        font-family: 'JetBrains Mono', monospace;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    #starsBg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .bg-glow {
+        position: fixed;
+        inset: -20vh -20vw;
+        z-index: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(closest-side at 20% 25%, rgba(0,240,255,0.14) 0%, transparent 68%),
+            radial-gradient(closest-side at 78% 28%, rgba(122,92,255,0.16) 0%, transparent 70%);
+        animation: bgFloat 14s ease-in-out infinite;
+    }
+
+    @keyframes bgFloat {
+        0%, 100% { opacity: 0.85; }
+        50% { opacity: 1; }
+    }
+
+    .splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        z-index: 2;
+    }
+
+    .splash.fade-out {
+        animation: exit 0.9s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    @keyframes exit {
+        to {
+            opacity: 0;
+            filter: blur(12px);
+        }
+    }
+
+    /* мягкая виньетка — только по краям */
+    .vignette {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse 70% 65% at 50% 48%, transparent 0%, rgba(0, 0, 0, 0.4) 70%, #000 100%);
+        z-index: 5;
+    }
+
+    /* тонкое свечение в центре */
+    .glow-orb {
+        pointer-events: none;
+        position: fixed;
+        width: min(520px, 90vw);
+        height: min(520px, 90vw);
+        left: 50%;
+        top: 44%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(126, 232, 255, 0.07) 0%, rgba(201, 169, 98, 0.04) 35%, transparent 68%);
+        animation: orbPulse 4s ease-in-out infinite;
+        z-index: 1;
+    }
+
+    @keyframes orbPulse {
+
+        0%,
+        100% {
+            opacity: 0.7;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        50% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.06);
+        }
+    }
+
+    .noise {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        opacity: 0.045;
+        z-index: 6;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .stars {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+    }
+
+    .star {
+        position: absolute;
+        background: #fff;
+        border-radius: 50%;
+        opacity: 0;
+        animation: twinkle 3s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+
+        0%,
+        100% {
+            opacity: 0.15;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    .frame {
+        position: relative;
+        z-index: 4;
+        text-align: center;
+        padding: 2rem 1.5rem;
+        padding-top: max(1.5rem, env(safe-area-inset-top));
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        max-width: 100%;
+        width: 100%;
+        animation: frameIn 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+
+    @keyframes frameIn {
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* SVG-эмблема */
+    .emblem {
+        width: min(200px, 52vw);
+        height: min(200px, 52vw);
+        margin: 0 auto 2rem;
+        position: relative;
+        opacity: 0;
+        animation: emblemIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards,
+            emblemFloat 5s ease-in-out 1.9s infinite;
+    }
+
+    @keyframes emblemIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.92);
+            filter: blur(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+    }
+
+    @keyframes emblemFloat {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+
+    .emblem svg {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 0 24px rgba(126, 232, 255, 0.25)) drop-shadow(0 0 48px rgba(201, 169, 98, 0.15));
+    }
+
+    .ring-svg {
+        position: absolute;
+        inset: -12%;
+        animation: spinSlow 20s linear infinite;
+    }
+
+    .ring-svg.rev {
+        animation-direction: reverse;
+        animation-duration: 14s;
+    }
+
+    @keyframes spinSlow {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .ornament {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.2rem;
+        opacity: 0;
+        animation: lineIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+    }
+
+    .ornament-line {
+        height: 1px;
+        width: min(80px, 18vw);
+        background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .ornament-diamond {
+        width: 6px;
+        height: 6px;
+        background: var(--gold);
+        transform: rotate(45deg);
+        box-shadow: 0 0 12px var(--gold);
+    }
+
+    @keyframes lineIn {
+        from {
+            opacity: 0;
+            transform: scaleX(0.3);
+        }
+
+        to {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+    }
+
+    .title {
+        font-family: 'Cinzel', 'Orbitron', serif;
+        font-weight: 700;
+        font-size: clamp(1.15rem, 5vw, 1.85rem);
+        letter-spacing: 0.12em;
+        line-height: 1.35;
+        position: relative;
+        max-width: 100%;
+        width: 100%;
+        padding: 0 0.25rem;
+        margin: 0 auto;
+    }
+
+    .title-spin-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 4rem;
+        margin: 0 auto;
+        opacity: 0;
+        perspective: 1000px;
+        perspective-origin: 50% 50%;
+        animation: titleReveal 1.5s cubic-bezier(0.16, 1, 0.3, 1) 1.15s forwards;
+    }
+
+    .title-spin-wrap.spin-active .title-spin-text {
+        animation: titleSpinMeridian 20s linear infinite, goldShimmer 5s ease-in-out infinite;
+    }
+
+    .title-spin-wrap.spin-active .title-spin-text:nth-child(2) {
+        animation: titleSpinMeridian2 20s linear infinite, goldShimmer 5s ease-in-out infinite;
+        position: absolute;
+    }
+
+    .title-spin-text {
+        display: inline-block;
+        transform-origin: center center;
+        transform-style: preserve-3d;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        white-space: nowrap;
+        padding: 0.2rem 0.5rem;
+        will-change: transform;
+        background: linear-gradient(105deg, var(--gold-dim) 0%, var(--gold-bright) 35%, var(--gold) 50%, var(--gold-bright) 65%, var(--gold-dim) 100%);
+        background-size: 220% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5)) drop-shadow(0 0 40px rgba(201, 169, 98, 0.28));
+    }
+
+    .title-spin-short {
+        display: none;
+    }
+
+    /* Вращение по меридиану — вокруг вертикальной оси (как глобус), не в плоскости экрана */
+    @keyframes titleSpinMeridian {
+        from { transform: rotateY(0deg); }
+        to   { transform: rotateY(360deg); }
+    }
+
+    @keyframes titleSpinMeridian2 {
+        from { transform: rotateY(180deg); }
+        to   { transform: rotateY(540deg); }
+    }
+
+    @keyframes titleReveal {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+            filter: blur(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+    @keyframes goldShimmer {
+        0%, 100% {
+            background-position: 0% center;
+        }
+
+        50% {
+            background-position: 100% center;
+        }
+    }
+
+    .subtitle {
+        margin-top: 1.6rem;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 400;
+        font-size: clamp(0.65rem, 2.8vw, 0.82rem);
+        letter-spacing: 0.55em;
+        text-transform: uppercase;
+        color: var(--muted);
+        animation: subUp 0.9s ease 0.85s both;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem 0.6rem;
+        max-width: 100%;
+    }
+
+    .subtitle .hl {
+        color: var(--ice);
+        letter-spacing: 0.4em;
+        text-shadow: 0 0 16px rgba(126, 232, 255, 0.5);
+    }
+
+    .subtitle .dot {
+        color: var(--gold);
+        margin: 0 0.35em;
+        text-shadow: 0 0 8px var(--gold);
+    }
+
+    @keyframes subUp {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+            letter-spacing: 0.7em;
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .progress-area {
+        position: fixed;
+        bottom: max(1.25rem, env(safe-area-inset-bottom));
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: min(300px, calc(100vw - 2rem));
+        z-index: 7;
+        animation: subUp 1s cubic-bezier(0.16, 1, 0.3, 1) 1.85s both;
+        padding: 0 1rem;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .progress-labels {
+        width: 100%;
+        max-width: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .progress-track {
+        width: 100%;
+        max-width: 280px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        position: relative;
+        overflow: visible;
+        margin: 0 auto;
+    }
+
+    .progress-glow {
+        position: absolute;
+        top: -1px;
+        left: 0;
+        height: 3px;
+        width: 0;
+        background: linear-gradient(90deg, var(--gold-dim), var(--ice), var(--gold));
+        box-shadow: 0 0 20px var(--ice), 0 0 40px rgba(201, 169, 98, 0.4);
+        animation: progress 3.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+    }
+
+    @keyframes progress {
+        to {
+            width: 100%;
+        }
+    }
+
+    .progress-dot {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        width: 5px;
+        height: 5px;
+        background: var(--ice);
+        border-radius: 50%;
+        transform: translate(50%, -50%) scale(0);
+        box-shadow: 0 0 12px var(--ice);
+        animation: dotPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 4.85s forwards;
+    }
+
+    @keyframes dotPop {
+        to {
+            transform: translate(50%, -50%) scale(1);
+        }
+    }
+
+    .hint {
+        margin-top: 1rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 300;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #3a3a42;
+        text-align: center;
+        width: 100%;
+        line-height: 1.5;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .skip-hint {
+        margin-top: 0.45rem;
+        font-size: 0.55rem;
+        letter-spacing: 0.06em;
+        color: #4a4a55;
+        text-align: center;
+        width: 100%;
+    }
+
+    .skip-short {
+        display: none;
+    }
+
+    .start-btn {
+        display: inline-block;
+        margin-top: 1.25rem;
+        padding: 0.85rem 2.2rem;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--void);
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+        border: 1px solid rgba(201, 169, 98, 0.6);
+        border-radius: 4px;
+        box-shadow: 0 0 24px rgba(201, 169, 98, 0.35), 0 4px 20px rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transform: translateY(12px);
+        pointer-events: none;
+        transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.25s ease;
+    }
+
+    .start-btn.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        animation: startPulse 2.5s ease-in-out infinite;
+    }
+
+    .start-btn.visible:hover,
+    .start-btn.visible:focus {
+        box-shadow: 0 0 32px rgba(110, 231, 255, 0.45), 0 0 20px rgba(201, 169, 98, 0.5);
+        outline: none;
+    }
+
+    @keyframes startPulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 24px rgba(201, 169, 98, 0.35), 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 36px rgba(110, 231, 255, 0.4), 0 4px 24px rgba(0, 0, 0, 0.45);
+        }
+    }
+
+    @media (min-width: 769px) {
+        .skip-hint {
+            display: none;
+        }
+    }
+
+    .scan-bar {
+        pointer-events: none;
+        position: fixed;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--ice), transparent);
+        opacity: 0;
+        z-index: 8;
+        animation: scanMove 2.5s ease-in-out 0.6s infinite;
+    }
+
+    @keyframes scanMove {
+        0% {
+            top: 15%;
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 0.35;
+        }
+
+        90% {
+            opacity: 0.35;
+        }
+
+        100% {
+            top: 85%;
+            opacity: 0;
+        }
+    }
+
+    /* ——— Мобильные ——— */
+    @media (max-width: 768px) {
+        .glow-orb {
+            width: 100vw;
+            height: 100vw;
+            top: 42%;
+        }
+
+        .emblem {
+            width: min(168px, 58vw);
+            height: min(168px, 58vw);
+            margin-bottom: 1.35rem;
+        }
+
+        .frame {
+            padding-top: max(2.5rem, env(safe-area-inset-top));
+            padding-bottom: 5.5rem;
+        }
+
+        .ornament {
+            gap: 0.55rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .ornament-line {
+            width: min(48px, 14vw);
+        }
+
+        .title-spin-full {
+            display: none;
+        }
+
+        .title-spin-short {
+            display: flex;
+            font-size: clamp(1.35rem, 7.5vw, 1.75rem);
+            letter-spacing: 0.08em;
+        }
+
+        .subtitle {
+            margin-top: 1rem;
+            letter-spacing: 0.22em;
+            font-size: 0.72rem;
+        }
+
+        .subtitle .hl,
+        .subtitle .dot,
+        .subtitle .sub-esp {
+            letter-spacing: 0.18em;
+        }
+
+        .progress-area {
+            width: min(280px, calc(100vw - 1.5rem));
+        }
+
+        .progress-track {
+            max-width: 260px;
+        }
+
+        .hint {
+            font-size: 0.56rem;
+            letter-spacing: 0.06em;
+            margin-top: 0.75rem;
+        }
+
+        .skip-hint {
+            letter-spacing: 0.04em;
+            font-size: 0.52rem;
+        }
+
+        .skip-long {
+            display: none;
+        }
+
+        .skip-short {
+            display: inline;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .emblem {
+            width: min(140px, 52vw);
+            height: min(140px, 52vw);
+            margin-bottom: 1rem;
+        }
+
+        @keyframes emblemFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        .title-spin-short {
+            font-size: clamp(1.2rem, 8vw, 1.5rem);
+            letter-spacing: 0.05em;
+        }
+
+        .subtitle {
+            flex-direction: column;
+            gap: 0.25rem;
+            letter-spacing: 0.15em;
+        }
+
+        .subtitle .dot {
+            display: none;
+        }
+
+        .progress-area {
+            width: min(260px, calc(100vw - 1.25rem));
+        }
+
+        .progress-track {
+            max-width: 240px;
+        }
+
+        .hint {
+            font-size: 0.5rem;
+            letter-spacing: 0.04em;
+        }
+
+        .skip-hint {
+            font-size: 0.48rem;
+        }
+    }
+
+    @media (max-width: 390px) {
+        .emblem {
+            width: 128px;
+            height: 128px;
+        }
+
+        .title-spin-short {
+            font-size: 1.15rem;
+        }
+
+        .subtitle {
+            font-size: 0.65rem;
+        }
+
+        .frame {
+            padding-bottom: 6.5rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .emblem,
+        .glow-orb,
+        .scan-bar,
+        .star,
+        .ring-svg,
+        .title-spin-text {
+            animation: none !important;
+        }
+
+        .title-spin-wrap.spin-active .title-spin-text {
+            transform: none;
+        }
+
+        .splash.fade-out {
+            animation-duration: 0.35s;
+        }
+    }
+</style>
+</head><body>
+<canvas id="starsBg"></canvas>
+<div class="bg-glow"></div>
+<div class="splash" id="splash">
+    <div class="stars" id="stars"><div class="star" style="width: 1px; height: 1px; left: 23.398%; top: 45.4481%; animation-delay: 1.05823s; animation-duration: 5.97242s;"></div><div class="star" style="width: 1px; height: 1px; left: 48.207%; top: 68.4161%; animation-delay: 2.79787s; animation-duration: 3.24367s;"></div><div class="star" style="width: 1px; height: 1px; left: 84.0458%; top: 19.7852%; animation-delay: 2.17319s; animation-duration: 2.09282s;"></div><div class="star" style="width: 1px; height: 1px; left: 10.4846%; top: 6.63827%; animation-delay: 0.98892s; animation-duration: 4.7463s;"></div><div class="star" style="width: 1px; height: 1px; left: 46.0388%; top: 58.0072%; animation-delay: 1.57314s; animation-duration: 5.34919s;"></div><div class="star" style="width: 1px; height: 1px; left: 40.5915%; top: 10.9497%; animation-delay: 0.328365s; animation-duration: 5.62787s;"></div><div class="star" style="width: 1px; height: 1px; left: 88.8323%; top: 28.576%; animation-delay: 0.164521s; animation-duration: 3.41435s;"></div><div class="star" style="width: 1px; height: 1px; left: 66.7591%; top: 55.8249%; animation-delay: 1.34701s; animation-duration: 3.56989s;"></div><div class="star" style="width: 1px; height: 1px; left: 21.0682%; top: 80.4693%; animation-delay: 2.8857s; animation-duration: 5.03567s;"></div><div class="star" style="width: 1px; height: 1px; left: 89.2374%; top: 65.8877%; animation-delay: 2.76491s; animation-duration: 4.29749s;"></div><div class="star" style="width: 1px; height: 1px; left: 65.7741%; top: 55.2174%; animation-delay: 1.53355s; animation-duration: 4.53361s;"></div><div class="star" style="width: 1px; height: 1px; left: 5.42456%; top: 36.2636%; animation-delay: 1.91811s; animation-duration: 3.46499s;"></div><div class="star" style="width: 1px; height: 1px; left: 34.4228%; top: 98.5152%; animation-delay: 1.63032s; animation-duration: 2.56406s;"></div><div class="star" style="width: 2px; height: 2px; left: 34.026%; top: 2.15989%; animation-delay: 1.49911s; animation-duration: 2.84149s;"></div><div class="star" style="width: 1px; height: 1px; left: 91.1774%; top: 49.6988%; animation-delay: 0.0995742s; animation-duration: 5.99229s;"></div><div class="star" style="width: 1px; height: 1px; left: 14.2454%; top: 44.3046%; animation-delay: 1.81871s; animation-duration: 4.98344s;"></div><div class="star" style="width: 1px; height: 1px; left: 7.71206%; top: 73.5085%; animation-delay: 1.85488s; animation-duration: 2.8652s;"></div><div class="star" style="width: 1px; height: 1px; left: 17.7899%; top: 84.3826%; animation-delay: 1.41964s; animation-duration: 2.13241s;"></div><div class="star" style="width: 1px; height: 1px; left: 41.69%; top: 46.4187%; animation-delay: 2.45203s; animation-duration: 4.00465s;"></div><div class="star" style="width: 1px; height: 1px; left: 15.5465%; top: 39.8737%; animation-delay: 2.6345s; animation-duration: 2.733s;"></div><div class="star" style="width: 1px; height: 1px; left: 31.813%; top: 80.8727%; animation-delay: 1.60118s; animation-duration: 4.8904s;"></div><div class="star" style="width: 1px; height: 1px; left: 54.0618%; top: 60.5031%; animation-delay: 1.44505s; animation-duration: 4.89041s;"></div><div class="star" style="width: 1px; height: 1px; left: 15.0055%; top: 81.2703%; animation-delay: 2.31409s; animation-duration: 2.13986s;"></div><div class="star" style="width: 1px; height: 1px; left: 29.1404%; top: 57.671%; animation-delay: 2.49637s; animation-duration: 3.37737s;"></div><div class="star" style="width: 1px; height: 1px; left: 43.1113%; top: 83.3569%; animation-delay: 0.673053s; animation-duration: 3.04912s;"></div><div class="star" style="width: 1px; height: 1px; left: 72.254%; top: 74.2379%; animation-delay: 0.0349901s; animation-duration: 3.87428s;"></div><div class="star" style="width: 1px; height: 1px; left: 28.9847%; top: 1.63546%; animation-delay: 0.0102434s; animation-duration: 3.8713s;"></div><div class="star" style="width: 1px; height: 1px; left: 31.444%; top: 16.2026%; animation-delay: 0.36217s; animation-duration: 5.42197s;"></div><div class="star" style="width: 1px; height: 1px; left: 27.8655%; top: 18.5589%; animation-delay: 1.76778s; animation-duration: 2.25259s;"></div><div class="star" style="width: 1px; height: 1px; left: 77.23%; top: 26.8094%; animation-delay: 2.798s; animation-duration: 5.46738s;"></div><div class="star" style="width: 1px; height: 1px; left: 50.0522%; top: 58.8953%; animation-delay: 2.20717s; animation-duration: 5.29933s;"></div><div class="star" style="width: 1px; height: 1px; left: 11.3898%; top: 60.4639%; animation-delay: 1.73301s; animation-duration: 2.67134s;"></div><div class="star" style="width: 1px; height: 1px; left: 70.0756%; top: 41.7417%; animation-delay: 1.73696s; animation-duration: 2.71158s;"></div><div class="star" style="width: 1px; height: 1px; left: 36.2682%; top: 50.1599%; animation-delay: 0.293477s; animation-duration: 5.56003s;"></div><div class="star" style="width: 1px; height: 1px; left: 38.1654%; top: 71.141%; animation-delay: 1.19517s; animation-duration: 5.71647s;"></div><div class="star" style="width: 1px; height: 1px; left: 74.4234%; top: 92.4064%; animation-delay: 0.957766s; animation-duration: 2.35526s;"></div><div class="star" style="width: 1px; height: 1px; left: 92.8086%; top: 31.5258%; animation-delay: 1.37267s; animation-duration: 3.54225s;"></div><div class="star" style="width: 1px; height: 1px; left: 94.1951%; top: 98.7668%; animation-delay: 0.974745s; animation-duration: 5.76396s;"></div><div class="star" style="width: 1px; height: 1px; left: 90.3368%; top: 83.6988%; animation-delay: 2.41434s; animation-duration: 3.81725s;"></div><div class="star" style="width: 1px; height: 1px; left: 49.8587%; top: 6.44109%; animation-delay: 2.20228s; animation-duration: 4.74143s;"></div><div class="star" style="width: 1px; height: 1px; left: 25.6429%; top: 0.833833%; animation-delay: 1.98503s; animation-duration: 5.09387s;"></div><div class="star" style="width: 1px; height: 1px; left: 25.2401%; top: 77.2203%; animation-delay: 2.94269s; animation-duration: 5.07136s;"></div><div class="star" style="width: 1px; height: 1px; left: 16.6213%; top: 42.8805%; animation-delay: 2.98969s; animation-duration: 2.01973s;"></div><div class="star" style="width: 1px; height: 1px; left: 37.6805%; top: 36.9927%; animation-delay: 1.67946s; animation-duration: 3.50413s;"></div><div class="star" style="width: 1px; height: 1px; left: 52.5389%; top: 17.068%; animation-delay: 2.4537s; animation-duration: 5.76066s;"></div><div class="star" style="width: 1px; height: 1px; left: 91.4591%; top: 68.1619%; animation-delay: 0.0923825s; animation-duration: 4.31153s;"></div><div class="star" style="width: 1px; height: 1px; left: 58.9179%; top: 11.0661%; animation-delay: 0.624762s; animation-duration: 4.14362s;"></div><div class="star" style="width: 1px; height: 1px; left: 14.4294%; top: 15.886%; animation-delay: 0.749758s; animation-duration: 4.91962s;"></div><div class="star" style="width: 1px; height: 1px; left: 83.954%; top: 1.05897%; animation-delay: 0.178324s; animation-duration: 4.2654s;"></div><div class="star" style="width: 1px; height: 1px; left: 35.3576%; top: 12.2713%; animation-delay: 2.56529s; animation-duration: 2.54344s;"></div><div class="star" style="width: 1px; height: 1px; left: 23.6182%; top: 48.5252%; animation-delay: 0.648431s; animation-duration: 2.63879s;"></div><div class="star" style="width: 1px; height: 1px; left: 99.7233%; top: 56.0701%; animation-delay: 2.07195s; animation-duration: 2.80375s;"></div><div class="star" style="width: 1px; height: 1px; left: 27.8791%; top: 72.7275%; animation-delay: 0.615533s; animation-duration: 4.61612s;"></div><div class="star" style="width: 1px; height: 1px; left: 64.7451%; top: 41.2056%; animation-delay: 0.0849712s; animation-duration: 4.67431s;"></div><div class="star" style="width: 1px; height: 1px; left: 47.5146%; top: 88.0626%; animation-delay: 0.853941s; animation-duration: 5.00405s;"></div><div class="star" style="width: 1px; height: 1px; left: 4.42417%; top: 88.3643%; animation-delay: 1.80154s; animation-duration: 2.91151s;"></div><div class="star" style="width: 1px; height: 1px; left: 78.5939%; top: 97.7197%; animation-delay: 2.85263s; animation-duration: 2.96469s;"></div><div class="star" style="width: 1px; height: 1px; left: 11.4069%; top: 5.49259%; animation-delay: 1.59209s; animation-duration: 4.20409s;"></div><div class="star" style="width: 1px; height: 1px; left: 72.4054%; top: 15.3967%; animation-delay: 1.61947s; animation-duration: 3.00498s;"></div><div class="star" style="width: 1px; height: 1px; left: 35.8811%; top: 4.73238%; animation-delay: 2.28085s; animation-duration: 2.15579s;"></div></div>
+    <div class="glow-orb"></div>
+    <div class="scan-bar"></div>
+    <div class="vignette"></div>
+    <div class="noise"></div>
+    <div class="frame">
+        <div class="emblem">
+            <div class="ring-svg"> <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="94" stroke="rgba(201,169,98,0.25)" stroke-width="0.5" stroke-dasharray="4 8"></circle>
+                    <circle cx="100" cy="100" r="88" stroke="rgba(126,232,255,0.2)" stroke-width="1"></circle>
+                </svg> </div>
+            <div class="ring-svg rev"> <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="78" stroke="rgba(126,232,255,0.15)" stroke-width="0.5" stroke-dasharray="2 6"></circle>
+                </svg> </div> <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="100,28 172,72 172,128 100,172 28,128 28,72" stroke="url(#g1)" stroke-width="1.2" fill="none" opacity="0.9"></polygon>
+                <polygon points="100,48 152,76 152,124 100,152 48,124 48,76" stroke="rgba(126,232,255,0.35)" stroke-width="0.6" fill="rgba(126,232,255,0.03)"></polygon> <text x="100" y="108" text-anchor="middle" font-family="Orbitron,sans-serif" font-size="28" font-weight="700" fill="url(#g2)">3301</text>
+                <defs>
+                    <lineargradient id="g1" x1="28" y1="28" x2="172" y2="172">
+                        <stop offset="0%" stop-color="#c9a962"></stop>
+                        <stop offset="50%" stop-color="#7ee8ff"></stop>
+                        <stop offset="100%" stop-color="#c9a962"></stop>
+                    </lineargradient>
+                    <lineargradient id="g2" x1="70" y1="80" x2="130" y2="120">
+                        <stop offset="0%" stop-color="#7ee8ff"></stop>
+                        <stop offset="100%" stop-color="#f4f4f6"></stop>
+                    </lineargradient>
+                </defs>
+            </svg>
+        </div>
+        <div class="ornament"> <span class="ornament-line"></span> <span class="ornament-diamond"></span> <span class="ornament-line"></span> </div>
+        <h1 class="title">
+            <div class="title-spin-wrap title-spin-full spin-active" id="titleSpinFull">
+                <span class="title-spin-text">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</span>
+                <span class="title-spin-text">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</span>
+            </div>
+            <div class="title-spin-wrap title-spin-short spin-active" id="titleSpinShort">
+                <span class="title-spin-text">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</span>
+                <span class="title-spin-text">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</span>
+            </div>
+        </h1>
+        <p class="subtitle"> <span class="hl">deauther</span> <span class="dot">◆</span> <span class="sub-esp">esp8266</span>
+        </p>
+    </div>
+    <div class="progress-area">
+        <div class="progress-track">
+            <div class="progress-glow"></div> <span class="progress-dot"></span>
+        </div>
+        <div class="progress-labels">
+            <p class="hint">ready</p>
+            <p class="hint skip-hint"> <span class="skip-long">кнопка «Продолжить» появится через 5 секунд</span> <span class="skip-short">через 5 с — «Продолжить»</span> </p> <a href="scan" class="start-btn" id="startBtn" aria-label="Продолжить">Продолжить</a>
+        </div>
+    </div>
+</div>
+<script src="js/site.js"></script>
+<script> (function () {
+    var TARGET = 'scan';
+    var stars = document.getElementById('stars');
+    var startBtn = document.getElementById('startBtn');
+    var titleSpinFull = document.getElementById('titleSpinFull');
+    var titleSpinShort = document.getElementById('titleSpinShort');
+    var redirected = false;
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function showStartBtn() {
+        if (startBtn) startBtn.classList.add('visible');
+        var hint = document.querySelector('.progress-labels .hint');
+        if (hint) hint.textContent = 'ready';
+    }
+
+    function startTitleSpin() {
+        if (reduceMotion) return;
+        if (titleSpinFull) titleSpinFull.classList.add('spin-active');
+        if (titleSpinShort) titleSpinShort.classList.add('spin-active');
+    }
+
+    function goTarget() {
+        if (redirected) return;
+        redirected = true;
+        document.getElementById('splash').classList.add('fade-out');
+        setTimeout(function () { window.location.href = TARGET; }, 650);
+    }
+
+    var starCount = window.matchMedia('(max-width: 480px)').matches ? 32 : 60;
+    for (var i = 0; i < starCount; i++) {
+        var s = document.createElement('div');
+        s.className = 'star';
+        var size = Math.random() > 0.92 ? 2 : 1;
+        s.style.width = size + 'px';
+        s.style.height = size + 'px';
+        s.style.left = (Math.random() * 100) + '%';
+        s.style.top = (Math.random() * 100) + '%';
+        s.style.animationDelay = (Math.random() * 3) + 's';
+        s.style.animationDuration = (2 + Math.random() * 4) + 's';
+        stars.appendChild(s);
+    }
+
+    getFile('settings.json', function (res) {
+        try {
+            var s = JSON.parse(res);
+            if (s.workmode === 1) {
+                TARGET = 'repeater';
+                if (startBtn) {
+                    startBtn.setAttribute('href', TARGET);
+                    startBtn.setAttribute('aria-label', 'Продолжить — ретранслятор');
+                }
+            }
+        } catch (e) { }
+    }, 5000);
+
+    setTimeout(startTitleSpin, 2700);
+    setTimeout(showStartBtn, 5000);
+
+    if (startBtn) {
+        startBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            goTarget();
+        });
+    }
+})(); </script>
+<script src="js/theme_bg.js"></script>
+</body></html>

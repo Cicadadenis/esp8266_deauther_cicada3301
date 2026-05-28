@@ -1,0 +1,17 @@
+*.bin
+*.elf
+*.map
+.DS_Store
+Thumbs.db
+*.pyc
+__pycache__/
+.vscode/
+.idea/
+
+utils/web_converter/css_html_js_minify/__pycache__/
+
+# Arduino CLI build cache
+esp8266_deauther/bin/
+**/bin/.compile_duration
+**/compile_commands.json
+**/sketch/

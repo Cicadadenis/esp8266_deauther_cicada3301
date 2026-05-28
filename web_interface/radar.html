@@ -1,0 +1,521 @@
+<html lang=ru data-theme=dark>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name=theme-color content="#050a1b">
+<title>ESP8266 Deauther • Radar</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel=stylesheet>
+<link rel=stylesheet href=css/cicada_theme.css>
+<style>
+    :root {
+    --cyan: #00f0ff;
+    --cyan-dim: rgba(0,240,255,0.4);
+    --gold: #d4af37;
+    --gold-dim: rgba(212,175,55,0.5);
+    --purple: #7a5cff;
+    --green: #00ff9d;
+    --orange: #ffaa00;
+    --red: #ff3366;
+}
+
+/* === CONTAINER === */
+.container {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 72px auto 32px;
+    padding: 0 1rem;
+}
+
+/* === HEADER === */
+.radar-hero { text-align:center; margin-bottom:1.5rem; }
+.title-wrap { display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:0.65rem; }
+.title-line {
+    flex:1; max-width:120px; height:2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    box-shadow: 0 0 18px var(--gold-dim), 0 0 40px rgba(240,192,64,0.2);
+}
+.radar-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.4rem,5vw,2rem);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    background: linear-gradient(180deg, #fff5a0 0%, #f0c040 40%, #d4880a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 24px rgba(240,192,64,0.6)) drop-shadow(0 0 50px rgba(240,192,64,0.3));
+}
+.sub {
+        color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* === STATS === */
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-bottom:1.25rem; }
+
+.stat-box {
+    text-align: center;
+    padding: 1rem 0.5rem;
+    border-radius: 16px;
+    background: rgba(6,14,35,0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.stat-box::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:16px;
+    opacity:0.06;
+    pointer-events:none;
+}
+.stat-box:hover { transform:translateY(-3px); }
+
+.stat-ap {
+    border-color: rgba(0,212,255,0.5);
+    box-shadow: 0 0 24px rgba(0,212,255,0.25), inset 0 0 30px rgba(0,212,255,0.06), 0 0 50px rgba(0,212,255,0.08);
+}
+.stat-ap::before { background: radial-gradient(circle at 50% 0%, #00d4ff, transparent); }
+
+.stat-st {
+    border-color: rgba(180,195,255,0.4);
+    box-shadow: 0 0 20px rgba(180,195,255,0.15), inset 0 0 25px rgba(180,195,255,0.05);
+}
+.stat-st::before { background: radial-gradient(circle at 50% 0%, #b0c0ff, transparent); }
+
+.stat-ch {
+    border-color: rgba(176,96,255,0.55);
+    box-shadow: 0 0 24px rgba(176,96,255,0.28), inset 0 0 30px rgba(176,96,255,0.07), 0 0 50px rgba(176,96,255,0.1);
+}
+.stat-ch::before { background: radial-gradient(circle at 50% 0%, #b060ff, transparent); }
+
+.stat-icon { font-size:1.2rem; margin-bottom:0.3rem; }
+.stat-ap .stat-num { color:var(--cyan); text-shadow:0 0 18px var(--cyan), 0 0 40px rgba(0,212,255,0.4); }
+.stat-st .stat-num { color:#c8d4ff; text-shadow:0 0 14px rgba(200,212,255,0.5); }
+.stat-ch .stat-num { color:#c87eff; text-shadow:0 0 18px var(--purple), 0 0 40px rgba(176,96,255,0.4); }
+.stat-num {
+        font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+.stat-lbl {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* === TOOLBAR === */
+.toolbar { display:flex; flex-wrap:wrap; gap:0.75rem; justify-content:center; margin-bottom:1.25rem; }
+
+.btn-refresh {
+    padding: 0.7rem 2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0,212,255,0.6);
+    background: rgba(0,212,255,0.07);
+    color: var(--cyan);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+        cursor: pointer;
+    box-shadow: 0 0 20px rgba(0,212,255,0.25), inset 0 0 20px rgba(0,212,255,0.04);
+    transition: all 0.25s;
+    text-shadow: 0 0 10px var(--cyan);
+    letter-spacing: 0.04em;
+}
+.btn-refresh:hover:not(:disabled) {
+    background: rgba(0,212,255,0.15);
+    box-shadow: 0 0 36px rgba(0,212,255,0.45), inset 0 0 20px rgba(0,212,255,0.08);
+}
+.btn-refresh:disabled { opacity:0.4; cursor:wait; }
+
+.auto-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(176,96,255,0.55);
+    background: rgba(176,96,255,0.08);
+    color: #d8aaff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(176,96,255,0.2);
+    text-shadow: 0 0 10px var(--purple);
+}
+.auto-toggle input { accent-color:var(--purple); width:1rem; height:1rem; cursor:pointer; }
+
+/* === RADAR PANEL === */
+    .radar-panel {
+    background: rgba(4,10,26,0.88);
+    backdrop-filter: blur(16px);
+    border-radius: 22px;
+    padding: 1.5rem 1rem 1rem;
+        position: relative;
+        overflow: hidden;
+
+    /* Glowing border */
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    box-shadow:
+        0 0 0 1px rgba(0,212,255,0.3),
+        0 0 30px rgba(0,212,255,0.15),
+        0 0 60px rgba(0,212,255,0.08),
+        0 0 0 1px rgba(176,96,255,0.15) inset,
+        inset 0 0 60px rgba(0,212,255,0.04),
+        inset 0 0 100px rgba(176,96,255,0.03);
+}
+
+/* Animated top glow line */
+    .radar-panel::before {
+    content:"";
+    position:absolute;
+    top:0; left:10%; right:10%;
+    height:2px;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.9), rgba(176,96,255,0.7), rgba(0,212,255,0.9), transparent);
+    box-shadow: 0 0 20px rgba(0,212,255,0.8), 0 0 40px rgba(0,212,255,0.4);
+    animation: topLine 4s ease-in-out infinite;
+}
+@keyframes topLine {
+    0%,100% { opacity:0.6; }
+    50% { opacity:1; box-shadow:0 0 30px rgba(0,212,255,1), 0 0 60px rgba(0,212,255,0.6); }
+}
+
+.radar-panel::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    background: radial-gradient(circle at 50% 48%, rgba(0,212,255,0.06) 0%, transparent 60%);
+    pointer-events:none;
+    }
+
+    .radar-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        aspect-ratio: 1;
+    }
+.radar-svg { width:100%; height:100%; display:block; }
+
+/* SVG styles — стиль линий как на scan, геометрия круга */
+.radar-grid { stroke:rgba(0,240,255,0.20); stroke-width:1; fill:none; }
+.radar-grid-outer { stroke:rgba(0,240,255,0.42); stroke-width:1.5; filter:drop-shadow(0 0 6px rgba(0,240,255,0.45)); }
+.radar-grid-mid { stroke:rgba(176,96,255,0.15); stroke-width:1; }
+.radar-ch-label {
+    fill: rgba(160,190,230,0.7);
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+}
+
+    .radar-sweep {
+    transform-origin: 200px 200px;
+        animation: radar-sweep 4s linear infinite;
+    }
+@keyframes radar-sweep { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.radar-sweep-wedge { fill:url(#sweepGrad); opacity:0.5; }
+.radar-sweep-line { stroke:url(#lineGrad); stroke-width:1.5; opacity:0.9; }
+
+.radar-center-glow { fill:url(#centerGrad); filter:url(#centerGlow); }
+.radar-center-core { fill:#00d4ff; filter:drop-shadow(0 0 4px #00d4ff); transform-box: fill-box; transform-origin: 50% 50%; animation: centerPulse 2.2s ease-in-out infinite; }
+
+@keyframes centerPulse {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.95; }
+}
+
+.radar-center-glow { animation: centerGlowPulse 2.8s ease-in-out infinite; opacity: 0.95; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes centerGlowPulse {
+    0%,100% { opacity: 0.75; }
+    50% { opacity: 1; }
+}
+
+/* Blip pulse animations */
+@keyframes blip-pulse-green {
+    0%,100% { r:5; opacity:1; }
+    50% { r:7; opacity:0.8; }
+}
+@keyframes blip-pulse-orange {
+    0%,100% { r:5; opacity:1; }
+    50% { r:6.5; opacity:0.75; }
+}
+@keyframes blip-pulse-red {
+    0%,100% { r:5; opacity:1; }
+    50% { r:6; opacity:0.7; }
+}
+
+.blip-ap { cursor:pointer; }
+.blip-ap:hover .blip-dot { r:8 !important; }
+
+.blip-ssid-label {
+    fill: rgba(255, 215, 120, 0.98);
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    pointer-events: none;
+    paint-order: stroke fill;
+    stroke: rgba(0, 0, 0, 0.88);
+    stroke-width: 3px;
+}
+.blip-clients-label {
+    fill: rgba(192, 132, 252, 0.9);
+    font-size: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+}
+
+@keyframes blipDotScale {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.18); opacity: 0.92; }
+}
+
+.blip-dot {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: blipDotScale 1.8s ease-in-out infinite;
+}
+
+.blip-sta {
+    animation: blipStaScale 2.1s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+}
+@keyframes blipStaScale {
+    0%,100% { transform: scale(1); opacity: 0.75; }
+    50% { transform: scale(1.25); opacity: 0.95; }
+}
+
+.radar-sweep-wedge {
+    filter: drop-shadow(0 0 10px rgba(0,212,255,0.35));
+    animation: sweepWedgeBreath 3.2s ease-in-out infinite;
+}
+@keyframes sweepWedgeBreath {
+    0%,100% { opacity: 0.45; }
+    50% { opacity: 0.75; }
+}
+
+/* === LEGEND === */
+.legend {
+        display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem 1.4rem;
+    justify-content: center;
+        align-items: center;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(0,212,255,0.12);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+}
+.legend span { display:inline-flex; align-items:center; gap:0.45rem; }
+.legend i {
+    width:10px; height:10px;
+    border-radius:50%;
+    display:inline-block;
+    box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+}
+.legend-ch { color:rgba(160,180,230,0.6); font-size:0.7rem; }
+
+/* === AP LIST === */
+button.list-toggle {
+    display: block;
+        width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid rgba(0, 212, 255, 0.28);
+    border-radius: 14px;
+    background: rgba(6, 14, 35, 0.88);
+        color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: border-color 0.25s, box-shadow 0.25s, color 0.25s, background 0.25s;
+    transform: none;
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.08);
+    text-shadow: none;
+}
+
+button.list-toggle:hover,
+button.list-toggle:focus,
+button.list-toggle:active,
+button.list-toggle.is-open {
+    background: rgba(8, 18, 42, 0.95);
+    color: var(--cyan);
+    border-color: rgba(0, 212, 255, 0.55);
+    box-shadow: 0 0 18px rgba(0, 212, 255, 0.2);
+    transform: none;
+}
+
+.ap-list-panel {
+    margin-top:0.75rem;
+    background:rgba(4,10,26,0.92);
+    border:1px solid rgba(0,212,255,0.15);
+    border-radius:18px;
+    overflow:hidden;
+    display:none;
+    box-shadow:0 0 24px rgba(0,212,255,0.08);
+}
+.ap-list-panel.open { display:block; }
+.ap-list { display:flex; flex-direction:column; max-height:320px; overflow-y:auto; }
+.ap-row {
+    display:flex; align-items:stretch; gap:0.65rem;
+    padding:0.85rem 1rem;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    cursor:pointer; transition:background 0.2s;
+}
+.ap-row:last-child { border-bottom:none; }
+.ap-row:hover, .ap-row.selected { background:rgba(0,212,255,0.06); }
+.ap-row-info { flex:1; min-width:0; }
+.ap-row-ssid { font-size:0.95rem; font-weight:700; color:var(--gold); margin-bottom:0.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 0 12px var(--gold-dim); }
+.ap-row.hidden .ap-row-ssid { color:var(--red); }
+.ap-row-line { font-size:0.75rem; color:#b8bdd8; line-height:1.5; }
+.ap-row-line .lbl { color:#607090; }
+.ap-row-ch { color:var(--cyan); font-weight:600; }
+.ap-row-side { display:flex; align-items:center; gap:0.5rem; flex-shrink:0; }
+.ap-row-dist { color:var(--cyan); font-size:0.88rem; font-weight:600; min-width:2rem; text-align:right; }
+.ap-row-gauge { width:60px; height:60px; flex-shrink:0; }
+.ap-row-gauge svg { width:100%; height:100%; display:block; }
+.ap-row-clients { font-size:0.65rem; color:var(--text-muted); margin-top:0.15rem; }
+.empty-msg { text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.82rem; }
+
+    #status {
+    position:fixed; top:0; left:0; right:0;
+    text-align:center; padding:0.2rem;
+    font-size:0.7rem; z-index:2000;
+    opacity:0; pointer-events:none;
+    }
+</style>
+
+<body onload="loadLang()">
+<canvas id=starsBg></canvas>
+<div class=bg-glow></div>
+<div class=bg-grid></div>
+    <div id=status></div>
+
+    <nav>
+        <ul class=menu>
+            <li><a href=scan>Скан</a>
+            <li><a href=radar class=active>Радар</a>
+            <li><a href=ssids>SSIDs</a>
+            <li><a href=attack>Атаки</a>
+            <li><a href=settings>Настр.</a>
+            <li><a href=info>Инфо</a>
+        </ul>
+    </nav>
+
+    <div class=container>
+    <header class=radar-hero>
+        <div class=title-wrap>
+            <span class=title-line aria-hidden=true></span>
+            <h1 class=radar-title>WI-FI РАДАР</h1>
+            <span class=title-line aria-hidden=true></span>
+        </div>
+        <p class=sub>Карта точек доступа по каналу и силе сигнала · ESP в центре</p>
+    </header>
+
+        <div class=stats>
+        <div class="stat-box stat-ap">
+            <div class=stat-icon>📡</div>
+            <div class=stat-num id=statAp>0</div>
+            <div class=stat-lbl>Wi-Fi сети</div>
+        </div>
+        <div class="stat-box stat-st">
+            <div class=stat-num id=statSt>0</div>
+            <div class=stat-lbl>Клиенты</div>
+        </div>
+        <div class="stat-box stat-ch">
+            <div class=stat-num id=statCh>—</div>
+            <div class=stat-lbl>Каналов</div>
+        </div>
+    </div>
+
+    <div class=toolbar>
+        <button type=button class=btn-refresh id=btnRefresh onclick="refreshRadar()">Обновить</button>
+        <label class=auto-toggle><input type=checkbox id=autoRefresh checked> Авто 5 с</label>
+        </div>
+
+    <div class=radar-panel>
+                <div class=radar-wrap id=radarWrap>
+                    <svg class=radar-svg viewBox="0 0 400 400" id=radarSvg aria-label="WiFi radar">
+                        <defs>
+                    <linearGradient id=sweepGrad x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="rgba(0,212,255,0)"/>
+                        <stop offset="60%" stop-color="rgba(0,212,255,0.25)"/>
+                        <stop offset="85%" stop-color="rgba(0,212,255,0.5)"/>
+                        <stop offset="100%" stop-color="rgba(120,200,255,0.7)"/>
+                    </linearGradient>
+                    <linearGradient id=lineGrad x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="rgba(0,212,255,0)"/>
+                        <stop offset="100%" stop-color="rgba(0,212,255,1)"/>
+                            </linearGradient>
+                    <radialGradient id=centerGrad cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="35%" stop-color="#00d4ff"/>
+                        <stop offset="100%" stop-color="rgba(0,212,255,0)"/>
+                    </radialGradient>
+                    <filter id=centerGlow x="-100%" y="-100%" width="300%" height="300%">
+                        <feGaussianBlur stdDeviation="6" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id=blipGlowGreen x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="3" result="b"/>
+                        <feColorMatrix in="b" type="matrix" values="0 2 0 0 0  0 5 0 0 0.5  0 1 0 0 0  0 0 0 1 0" result="colored"/>
+                        <feMerge><feMergeNode in="colored"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id=blipGlowOrange x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="3" result="b"/>
+                        <feColorMatrix in="b" type="matrix" values="3 1 0 0 0  1 0.7 0 0 0  0 0 0 0 0  0 0 0 1 0" result="colored"/>
+                        <feMerge><feMergeNode in="colored"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id=blipGlowRed x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="3" result="b"/>
+                        <feColorMatrix in="b" type="matrix" values="4 0 0 0 0  0 0 0 0 0  0 0 0.5 0 0  0 0 0 1 0" result="colored"/>
+                        <feMerge><feMergeNode in="colored"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id=gridGlow>
+                        <feGaussianBlur stdDeviation="1" result="b"/>
+                        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                        </defs>
+                        <g id=radarGrid></g>
+                <g class=radar-sweep id=radarSweep></g>
+                        <g id=radarBlips></g>
+                <circle class=radar-center-glow cx=200 cy=200 r=18/>
+                <circle class=radar-center-core cx=200 cy=200 r=5/>
+                    </svg>
+                </div>
+                <div class=legend>
+            <span><i style="background:var(--green);color:var(--green)"></i> сильный</span>
+            <span>—</span>
+            <span><i style="background:var(--orange);color:var(--orange)"></i> средний</span>
+            <span>—</span>
+            <span><i style="background:var(--red);color:var(--red)"></i> слабый</span>
+            <div class=legend-ch style="width:100%;text-align:center;margin-top:0.2rem">угол ≈ канал 1–14</div>
+        </div>
+    </div>
+
+    <button type=button class=list-toggle id=listToggle onclick="toggleApList()">▼ Список AP</button>
+    <div class=ap-list-panel id=apListPanel>
+        <div class=ap-list id=apList></div>
+        <p class=empty-msg id=emptyMsg style="display:none">Нет Wi-Fi сети — нажмите «Обновить».</p>
+    </div>
+</div>
+
+<script src=js/theme_bg.js></script>
+    <script src=js/site.js></script>
+    <script src=js/radar.js></script>
+</body>
+</html>

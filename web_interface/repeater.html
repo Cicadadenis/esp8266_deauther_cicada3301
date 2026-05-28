@@ -1,0 +1,229 @@
+<html lang=ru data-theme=dark>
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name=theme-color content="#050a1b">
+<title>Deauther • Repeater</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Orbitron:wght@500;700;900&amp;display=swap" rel=stylesheet>
+<link rel=stylesheet href=css/cicada_theme.css>
+<style>
+    .container { max-width: 900px; }
+    .wizard-steps {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 0.5rem 0 1.25rem;
+        flex-wrap: wrap;
+    }
+    .wizard-step {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(34, 85, 255, 0.35);
+        color: var(--text-muted);
+        background: rgba(5, 10, 30, 0.5);
+    }
+    .wizard-step.active {
+        color: var(--accent);
+        border-color: rgba(0, 240, 255, 0.5);
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+    }
+    .wizard-step.done { color: var(--success); border-color: rgba(0, 255, 157, 0.4); }
+    .rep-panel { display: none; }
+    .rep-panel.active { display: block; }
+    .rep-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; justify-content: center; margin-top: 0.75rem; }
+    button.rep-scan {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(122, 92, 255, 0.12)) !important;
+        border: 1px solid rgba(0, 240, 255, 0.45) !important;
+        color: var(--accent) !important;
+        transform: none !important;
+    }
+    button.rep-scan:hover { box-shadow: 0 0 22px rgba(0, 240, 255, 0.28) !important; transform: none !important; }
+    button.rep-off {
+        background: rgba(255, 51, 102, 0.14) !important;
+        border: 1px solid rgba(255, 51, 102, 0.45) !important;
+        color: #ff88aa !important;
+        transform: none !important;
+    }
+    button.rep-off:hover { transform: none !important; }
+    button.rep-primary {
+        width: 100%;
+        margin-top: 0.85rem;
+        background: linear-gradient(135deg, #059669, var(--success)) !important;
+        color: #000 !important;
+        font-weight: 700;
+        transform: none !important;
+        min-height: 44px;
+    }
+    button.rep-primary:hover { transform: none !important; box-shadow: 0 0 22px rgba(0, 255, 157, 0.35) !important; }
+    button.rep-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.rep-secondary {
+        width: 100%;
+        margin-top: 0.5rem;
+        background: rgba(5, 10, 30, 0.6) !important;
+        border: 1px solid rgba(0, 240, 255, 0.35) !important;
+        color: var(--accent) !important;
+        transform: none !important;
+    }
+    button.rep-secondary:hover { transform: none !important; }
+    .status {
+        text-align: center;
+        margin-top: 0.75rem;
+        font-size: 0.78rem;
+        color: var(--neon-cyan);
+        min-height: 2.2rem;
+        line-height: 1.45;
+        padding: 0.5rem 0.35rem;
+    }
+    .step-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.65rem;
+    }
+    .field label { display: block; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+    .field { margin-bottom: 0.75rem; }
+    .field input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem 0.9rem;
+        border-radius: 12px;
+        background: rgba(5, 10, 28, 0.85);
+        border: 1px solid rgba(34, 85, 255, 0.35);
+        color: var(--text);
+    }
+    .field input[readonly] {
+        opacity: 0.92;
+        border-color: rgba(0, 240, 255, 0.25);
+    }
+    .upstream-ok {
+        margin-top: 0.75rem;
+        padding: 0.75rem 0.9rem;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 255, 157, 0.35);
+        background: rgba(0, 255, 157, 0.08);
+        font-size: 0.8rem;
+        color: #9dffd0;
+        display: none;
+    }
+    .upstream-ok.visible { display: block; }
+    .net-list { margin-top: 0.75rem; display: grid; gap: 0.55rem; max-height: 38vh; overflow-y: auto; }
+    button.net {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.7rem;
+        width: 100%;
+        padding: 0.8rem 0.95rem;
+        border-radius: 14px;
+        border: 1px solid rgba(34, 85, 255, 0.28);
+        background: rgba(5, 10, 30, 0.55);
+        cursor: pointer;
+        text-align: left;
+        transform: none !important;
+    }
+    button.net:hover, button.net.selected {
+        border-color: rgba(0, 240, 255, 0.45);
+        box-shadow: 0 0 18px rgba(0, 240, 255, 0.14);
+        background: rgba(8, 18, 45, 0.75);
+        transform: none !important;
+    }
+    .net-main { min-width: 0; flex: 1; }
+    .net .ssid { font-weight: 700; color: var(--gold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .net .meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .net-pick { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--accent); }
+    .net-hint-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    #netHint { font-size: 0.75rem; color: var(--text-muted); }
+    button.linkish {
+        background: transparent !important;
+        border: none !important;
+        color: var(--accent) !important;
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.75rem !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    .ap-hint { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.45; }
+    #repStep2 { text-align: center; }
+</style>
+
+<body onload="loadLang()">
+    <canvas id=starsBg></canvas>
+    <div class=bg-glow></div>
+    <div class=bg-grid></div>
+    <nav>
+        <ul class=menu>
+            <li><a href=repeater class=active>Ретранслятор</a>
+            <li><a href=settings>Настройки</a>
+            <li><a href=info>Инфо</a>
+        </ul>
+    </nav>
+    <div class=container>
+        <h1 class=header>꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</h1>
+        <h1 class=header>РЕТРАНСЛЯТОР</h1>
+
+        <div class=wizard-steps>
+            <span class="wizard-step active" id=wizStep1>1 · Настройка</span>
+            <span class=wizard-step id=wizStep2>2 · Готово</span>
+        </div>
+
+        <div class=card>
+            <div class=status id=repStatus></div>
+            <div class=rep-actions>
+                <button type=button class=rep-off onclick="disconnectRepeater()">Отключить ретранслятор</button>
+            </div>
+        </div>
+
+        <!-- Шаг 1: выбор сети + параметры новой AP -->
+        <div class="card rep-panel active" id=repStep1>
+            <div class=step-title>Шаг 1 · Настройка ретранслятора</div>
+            <p class=hint style="margin-bottom:0.75rem">Сети сканируются автоматически. Выберите сеть, введите пароль (если нужен), задайте имя новой точки доступа и нажмите «Применить». После перезагрузки снова подключитесь к Wi‑Fi — эта страница обновится сама.</p>
+
+            <div class=field>
+                <label>Выбранная сеть</label>
+                <input id=upSsid type=text placeholder="Выберите из списка" readonly>
+            </div>
+            <div class=field>
+                <label>Пароль Wi‑Fi</label>
+                <input id=upPass type=password placeholder="Пароль выбранной сети" autocomplete=off>
+            </div>
+
+            <div class=net-hint-row>
+                <strong style="color:var(--neon-cyan);font-size:0.82rem">Сети поблизости</strong>
+                <button type=button class=linkish onclick="openRepeaterNetworkPicker()">Список</button>
+                <span id=netHint></span>
+            </div>
+            <div class=net-list id=netList></div>
+
+            <p class=ap-hint>Задайте имя новой точки доступа. Пароль необязателен (открытая сеть) или от 8 символов.</p>
+
+            <div class=field>
+                <label>Имя сети (SSID)</label>
+                <input id=apSsid type=text placeholder="cicada3301_relay" maxlength=32>
+            </div>
+            <div class=field>
+                <label>Пароль (необязательно)</label>
+                <input id=apPass type=password placeholder="Оставьте пустым — без пароля" autocomplete=off>
+            </div>
+
+            <button type=button class=rep-primary id=btnApplyRepeater onclick="applyRepeater()">Применить</button>
+        </div>
+
+        <!-- Шаг 3: активен -->
+        <div class="card rep-panel" id=repStep2>
+            <div class=step-title>Готово</div>
+            <p class=hint id=repDoneMsg>Подключайтесь к созданной точке — интернет идёт через выбранную Wi‑Fi сеть (без окна авторизации).</p>
+            <button type=button class=rep-secondary onclick="goRepeaterStep(1,true)">Настроить заново</button>
+        </div>
+    </div>
+    <script src="js/theme_bg.js"></script>
+    <script src="js/site.js"></script>
+    <script src="js/repeater.js"></script>
+</body>
+</html>
